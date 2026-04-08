@@ -2,22 +2,23 @@
 
 ## Sumário
 
-* [Visão Geral](#-visão-geral)
+* [Visão Geral](#visao-geral)
 * [Tecnologias Utilizadas](#tecnologias-utilizadas)
 * [Arquitetura do Pipeline](#arquitetura-do-pipeline)
-* [Configuração da DAG](#configuração-da-dag)
-* [Conexão com o Banco](#conexão-com-o-banco)
+* [Configuração da DAG](#configuracao-da-dag)
+* [Conexão com o Banco](#conexao-com-o-banco)
 * [Ambiente com Docker](#ambiente-com-docker)
 * [Acessando o Banco com DBeaver](#acessando-o-banco-com-dbeaver)
 * [Como Executar o Projeto](#como-executar-o-projeto)
 * [Estrutura de Arquivos](#estrutura-de-arquivos)
 * [Tratamento de Erros](#tratamento-de-erros)
-* [Possíveis Melhorias](#possíveis-melhorias)
+* [Possíveis Melhorias](#possiveis-melhorias)
 * [Objetivo do Projeto](#objetivo-do-projeto)
-* [Evidências de Execução](#evidências-de-execução)
+* [Evidências de Execução](#evidencias-de-execucao)
 
+---
 
-## 📌 Visão Geral
+<h2 id="visao-geral">📌 Visão Geral</h2>
 
 Este projeto implementa um pipeline de dados utilizando **Apache Airflow** para coletar, transformar e armazenar cotações de moedas disponibilizadas pelo **Banco Central do Brasil (BCB)**.
 
@@ -25,7 +26,7 @@ O pipeline segue o padrão **ETL (Extract, Transform, Load)** e executa diariame
 
 ---
 
-## ⚙️ Tecnologias Utilizadas
+<h2 id="tecnologias-utilizadas">⚙️ Tecnologias Utilizadas</h2>
 
 * Python
 * Apache Airflow
@@ -35,22 +36,23 @@ O pipeline segue o padrão **ETL (Extract, Transform, Load)** e executa diariame
 
 ---
 
-## 🏗️ Arquitetura do Pipeline
+<h2 id="arquitetura-do-pipeline">🏗️ Arquitetura do Pipeline</h2>
 
 O fluxo da DAG é composto pelas seguintes etapas:
 
 ```text
 Extract → Transform → Create Table → Load
-```
+````
 
 ### 1. Extract
 
 * Baixa arquivos CSV diretamente do site do BCB
 * Endpoint:
 
-  ```
-  https://www4.bcb.gov.br/Download/fechamento/YYYYMMDD.csv
-  ```
+```
+https://www4.bcb.gov.br/Download/fechamento/YYYYMMDD.csv
+```
+
 * Trata erros:
 
   * `404`: dias sem cotação (feriados/finais de semana)
@@ -70,8 +72,6 @@ Extract → Transform → Create Table → Load
 ---
 
 ### 3. Create Table
-
-* Cria a tabela `cotacoes` no PostgreSQL (caso não exista)
 
 ```sql
 CREATE TABLE IF NOT EXISTS cotacoes (
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS cotacoes (
 
 ---
 
-## 📅 Configuração da DAG
+<h2 id="configuracao-da-dag">📅 Configuração da DAG</h2>
 
 ```python
 schedule='@daily'
@@ -110,20 +110,16 @@ catchup=True
 ### 🔎 Explicação
 
 * **@daily**: executa diariamente
-* **catchup=True**: executa retroativamente para todas as datas no intervalo
-* **intervalo fechado**: de 01/01/2026 até 07/04/2026
+* **catchup=True**: executa retroativamente
+* Intervalo: 01/01/2026 até 07/04/2026
 
 ---
 
-## 🔌 Conexão com o Banco (PostgreSQL)
-
-A DAG utiliza a conexão:
+<h2 id="conexao-com-o-banco">🔌 Conexão com o Banco (PostgreSQL) - Configurações Padrão</h2>
 
 ```
 postgres_conn_id = "postgres_astro"
 ```
-
-### Configuração no Airflow (Valores padrão):
 
 * Host: postgres
 * Database: postgres
@@ -131,30 +127,17 @@ postgres_conn_id = "postgres_astro"
 * Password: postgres
 * Port: 5432
 
-> ⚠️ Esses valores podem variar dependendo do seu `docker-compose` / Astro
-
 ---
 
-## 🐳 Ambiente com Docker (Astro)
+<h2 id="ambiente-com-docker">🐳 Ambiente com Docker (Astro)</h2>
 
-Este projeto utiliza **Docker** via **Astro CLI** para subir o ambiente completo do Airflow.
-
-### 📦 Serviços executados
-
-* Airflow Webserver
-* Airflow Scheduler
-* PostgreSQL
-* Redis
-
----
-
-### ▶️ Subir o ambiente
+### ▶️ Subir
 
 ```bash
 astro dev start
 ```
 
-### ⛔ Parar o ambiente
+### ⛔ Parar
 
 ```bash
 astro dev stop
@@ -168,18 +151,7 @@ astro dev restart
 
 ---
 
-### 🌐 Acessos
-
-* Airflow UI: [http://localhost:8080](http://localhost:8080)
-* PostgreSQL (interno Docker): `postgres:5432`
-
----
-
-## 🛢️ Acessando o Banco com DBeaver
-
-Você pode conectar ao PostgreSQL do Airflow usando o **DBeaver**.
-
-### 🔌 Configuração da conexão
+<h2 id="acessando-o-banco-com-dbeaver">🛢️ Acessando o Banco com DBeaver  - Configurações Padrão</h2>
 
 | Campo    | Valor     |
 | -------- | --------- |
@@ -189,50 +161,34 @@ Você pode conectar ao PostgreSQL do Airflow usando o **DBeaver**.
 | User     | postgres  |
 | Password | postgres  |
 
-> ⚠️ Caso não funcione, verifique se a porta 5432 está exposta no Docker
-
 ---
 
-### 📊 Verificando os dados
+<h2 id="como-executar-o-projeto">▶️ Como Executar o Projeto</h2>
 
-Após rodar a DAG:
-
-```sql
-SELECT * FROM cotacoes;
-```
-
----
-
-## ▶️ Como Executar o Projeto
-
-### 1. Subir ambiente
+1. Subir ambiente:
 
 ```bash
 astro dev start
 ```
 
-### 2. Acessar Airflow
+2. Acessar:
 
 ```
 http://localhost:8080
 ```
 
-### 3. Ativar DAG
+3. Ativar DAG:
 
-* Buscar: `fin_cotacoes_bcb_classic`
-* Ativar (toggle ON)
-* Executar manualmente ou aguardar scheduler
+* `fin_cotacoes_bcb_classic`
 
 ---
 
-## 📂 Estrutura de Arquivos
+<h2 id="estrutura-de-arquivos">📂 Estrutura de Arquivos</h2>
 
 ```bash
 .
 ├── dags/
-│   └── fin_cotacoes_bcb_classic.py
-├── include/
-├── plugins/
+├── screenshots/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
@@ -240,56 +196,55 @@ http://localhost:8080
 
 ---
 
-## ⚠️ Tratamento de Erros
+<h2 id="tratamento-de-erros">⚠️ Tratamento de Erros</h2>
 
-* Dias sem cotação → `AirflowSkipException`
-* Falha HTTP → Exception
-* Arquivo inexistente → validação em cada etapa
-
----
-
-## 📈 Possíveis Melhorias
-
-* Implementar **upsert (ON CONFLICT)** no PostgreSQL
-* Adicionar logs estruturados
-* Armazenar arquivos em Data Lake (S3, GCS)
-* Criar camada de validação de dados
-* Orquestrar múltiplas fontes de dados
+* `AirflowSkipException`
+* Erros HTTP
+* Validação de arquivos
 
 ---
 
-## 🎯 Objetivo do Projeto
+<h2 id="possiveis-melhorias">📈 Possíveis Melhorias</h2>
 
-Demonstrar habilidades em:
+* Upsert no PostgreSQL
+* Logs estruturados
+* Data Lake (S3/GCS)
+* Validação de dados
+
+---
+
+<h2 id="objetivo-do-projeto">🎯 Objetivo do Projeto</h2>
 
 * Engenharia de Dados
-* Orquestração com Airflow
-* Integração com APIs públicas
-* Processamento de dados com Pandas
-* Persistência em banco relacional
+* Airflow
+* APIs públicas
+* Pandas
+* PostgreSQL
+
 ---
-## Evidências de Execução
 
-Site com as cotações do Banco Central do Brasil:
+<h2 id="evidencias-de-execucao">📸 Evidências de Execução</h2>
 
-![Evidência 1](/screenshots/ev1.png)
+Site com as cotações do Banco Central do Brasil: 
 
-Dados no DBeaver:
+![Evidência 1](/screenshots/ev1.png) 
 
-![Evidência 2](/screenshots/ev2.png)
+Dados no DBeaver: 
 
-DAG no airflow:
+![Evidência 2](/screenshots/ev2.png) 
 
-![Evidência 3](/screenshots/ev3.png)
+DAG no airflow: 
 
-Visão geral da DAG:
+![Evidência 3](/screenshots/ev3.png) 
 
-![Evidência 4](/screenshots/ev4.png)
+Visão geral da DAG: 
 
-Visualização gráfica da DAG:
+![Evidência 4](/screenshots/ev4.png) 
 
-![Evidência 5](/screenshots/ev5.png)
+Visualização gráfica da DAG: 
 
-Docker executando o ambiente:
+![Evidência 5](/screenshots/ev5.png) 
+
+Docker executando o ambiente: 
 
 ![Evidência 6](/screenshots/ev6.png)
